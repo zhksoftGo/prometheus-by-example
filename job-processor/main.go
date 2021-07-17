@@ -91,7 +91,7 @@ type Job struct {
 	Sleep time.Duration
 }
 
-// makeJob creates a new job with a random sleep time between 10 ms and 4000ms
+// makeJob creates a new job with a random sleep time between 10 ms and 110ms
 func makeJob() *Job {
 	return &Job{
 		Type:  getType(),
@@ -133,20 +133,18 @@ func createJobs(jobs chan<- *Job) {
 // creates a worker that pulls jobs from the job channel
 func startWorker(workerID int, jobs <-chan *Job) {
 	for {
-		select {
 		// read from the job channel
-		case job := <-jobs:
-			startTime := time.Now()
+		job := <-jobs
+		startTime := time.Now()
 
-			// fake processing the request
-			time.Sleep(job.Sleep)
-			log.Printf("[%d][%s] Processed job in %0.3f seconds", workerID, job.Type, time.Now().Sub(startTime).Seconds())
-			// track the total number of jobs processed by the worker
-			totalCounterVec.WithLabelValues(strconv.FormatInt(int64(workerID), 10), job.Type).Inc()
-			// decrement the inflight tracker
-			inflightCounterVec.WithLabelValues(job.Type).Dec()
+		// fake processing the request
+		time.Sleep(job.Sleep)
+		log.Printf("[%d][%s] Processed job in %0.3f seconds", workerID, job.Type, time.Since(startTime).Seconds())
+		// track the total number of jobs processed by the worker
+		totalCounterVec.WithLabelValues(strconv.FormatInt(int64(workerID), 10), job.Type).Inc()
+		// decrement the inflight tracker
+		inflightCounterVec.WithLabelValues(job.Type).Dec()
 
-			processingTimeVec.WithLabelValues(strconv.FormatInt(int64(workerID), 10), job.Type).Observe(time.Now().Sub(startTime).Seconds())
-		}
+		processingTimeVec.WithLabelValues(strconv.FormatInt(int64(workerID), 10), job.Type).Observe(time.Since(startTime).Seconds())
 	}
 }
