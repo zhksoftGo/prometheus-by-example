@@ -13,7 +13,7 @@ import (
 )
 
 var (
-	types   = []string{"emai", "deactivation", "activation", "transaction", "customer_renew", "order_processed"}
+	types   = []string{"email", "deactivation", "activation", "transaction", "customer_renew", "order_processed"}
 	workers = 0
 
 	totalCounterVec = prometheus.NewCounterVec(
